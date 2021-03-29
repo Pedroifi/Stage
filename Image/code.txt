@@ -1,0 +1,76 @@
+2 Realization
+2.1 Image crop
+Code:
+
+def cut_img(img, T_H, T_W):
+    # 获得最高点和最低点
+    y = img.sum(axis=1)
+    y_top = (y != 0).argmax(axis=0)
+    y_btm = (y != 0).cumsum(axis=0).argmax(axis=0)
+    img = img[y_top:y_btm + 1, :]
+    # 如果高比宽要大，用高计算 resize 的比例
+    _r = img.shape[1] / img.shape[0]
+    _t_w = int(T_H * _r)
+    img = cv2.resize(img, (_t_w, T_H), interpolation=cv2.INTER_CUBIC)
+    # 获得人的对称轴
+    sum_point = img.sum()
+    sum_column = img.sum(axis=0).cumsum()
+    x_center = -1
+    for i in range(sum_column.size):
+        if sum_column[i] > sum_point / 2:
+            x_center = i
+            break
+    h_T_W = int(T_W / 2)
+    left = x_center - h_T_W
+    right = x_center + h_T_W
+    if left <= 0 or right >= img.shape[1]:
+        left += h_T_W
+        right += h_T_W
+        _ = np.zeros((img.shape[0], h_T_W))
+        img = np.concatenate([_, img, _], axis=1)
+    img = img[:, left:right]
+    return img.astype('uint8')
+test:
+
+# 图片读取为二值格式
+img = cv2.imread('H:/gait recognition/data/001-bg-01-090-044.png',-1)
+img1 = cut_img(img, 128, 128)
+
+
+cv2.imshow('image', img)
+cv2.imshow('image1', img1)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+******************************************************************
+2.2 Energy map production
+    Images in a gait cycle after segmentation:
+
+
+
+Code:
+
+def get_GEI(path):
+    # path 是文件夹对应的路径，一个文件夹下面放置一个步态周期内的已经剪裁好的图像
+    imgs = os.listdir()
+    path1 = os.getcwd()
+    imgs_list = [cv2.imread(path1 +'\\'+i)/255 for i in imgs]
+    
+    GEI = imgs_list[0]
+    for i in imgs_list[1:]:
+        GEI += i
+    GEI = GEI/len(imgs_list)
+    
+    return GEI
+test:
+
+GEI = get_GEI(r'H:\gait recognition\data\gait')
+
+cv2.imshow('image2', GEI)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+The results show that:
+note:
+
+The image must be normalized, otherwise the following result will be displayed:
+
