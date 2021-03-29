@@ -3,6 +3,7 @@ import cv2
 import argparse
 
 # construct the argument parser and parse the arguments
+#
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--person_name", type=str, required=True,
 	help="Name of the person that is recording")
